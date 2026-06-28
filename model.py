@@ -31,12 +31,17 @@ class MoEFeedForward(torch.nn.Module):
     def forward(self, x):
         #x = [batch_size, sequence_length, input_dim]
         B, T, D = x.shape
+        num_tokens = B * T
+        num_experts = len(self.experts)
+
         router_logits = self.router(x)  #[batch_size, sequence_length, num_experts] 
+
+        router_probs = F.softmax(router_logits, dim=-1) # [B, T, E]
+
         topk_logits, topk_indices = torch.topk(router_logits, k=self.top_k, dim=-1)
         topk_weights = F.softmax(topk_logits, dim=-1)
 
-        num_tokens = B * T
-        flat_x = x.reshape(num_tokens, -1) # [batch_size * sequence_length, input_dim]
+        flat_x = x.reshape(num_tokens, D) # [batch_size * sequence_length, input_dim]
 
         flat_topk_indices = topk_indices.reshape(num_tokens, self.top_k)  # [batch_size * sequence_length, top_k]
         flat_topk_weights = topk_weights.reshape(num_tokens, self.top_k)  #[batch_size * sequence_length, top_k]
@@ -58,9 +63,15 @@ class MoEFeedForward(torch.nn.Module):
             weighted_output =  routing_weights * expert_output
 
             flat_output = flat_output.index_add(0,token_ids, weighted_output)
+        
+        selected_mask = F.one_hot(topk_indices, num_classes=num_experts).float() #[B, T, K, E] : for each expert K selected add one-hot encoding
+        load = selected_mask.sum(dim=2).mean(dim=(0, 1)) / self.top_k # [E] containing relative percentages of each expert being selected
+        importance = router_probs.mean(dim=(0, 1)) # [E] average probability assigned to each expert
+        aux_loss = num_experts * torch.sum(load * importance)
+        output = flat_output.reshape(B, T, D)  # [batch_size, sequence_length, input_dim]
 
-        return flat_output.reshape(B, T, D)  # [batch_size, sequence_length, input_dim]
-
+        return output, aux_loss 
+    
 class TransformerMoEBlock(nn.Module):
     def __init__(self, hidden_dim, num_experts=8, top_k=2):
         super().__init__()
@@ -78,8 +89,9 @@ class TransformerMoEBlock(nn.Module):
         attn_output, _ = self.attention(x_norm, x_norm, x_norm, attn_mask=causal_mask, need_weights=False)
 
         x = x + attn_output  # Residual connection
-        x = x + self.moe(self.moe_norm(x))  # MoE layer with residual connection
-        return x
+        moe_output, aux_loss = self.moe(self.moe_norm(x))
+        x = x + moe_output
+        return x, aux_loss
 
 
 
@@ -89,6 +101,7 @@ class TransformerMoEBlock(nn.Module):
 class Model(torch.nn.Module):
     def __init__(self, vocab_size, hidden_dim, max_seq_length=1024):
         super(Model, self).__init__()
+        self.max_seq_length = max_seq_length
         self.token_embedding = nn.Embedding(vocab_size, hidden_dim)
         self.positional_embedding = nn.Embedding(max_seq_length, hidden_dim)
         self.output_projection = nn.Linear(hidden_dim, vocab_size)
@@ -107,17 +120,60 @@ class Model(torch.nn.Module):
     
         x = x + self.positional_embedding(pos)  # [Batch size, Sequence length, hidden_dim]
 
-        seq_len = x.size(1)
-        causal_mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device, dtype=torch.bool), diagonal=1)
+        causal_mask = torch.triu(torch.ones(T, T, device=x.device, dtype=torch.bool), diagonal=1)
+
+        aux_losses = []
 
         for block in self.MoEBlocks:
-            x = block(x)
-        
+            x, aux_loss = block(x, causal_mask=causal_mask)
+            aux_losses.append(aux_loss)
+        moe_aux_loss = torch.stack(aux_losses).mean()
+
         x = self.final_norm(x)
 
-        x = self.output_projection(x)
-        return x
+        logits = self.output_projection(x)
+        return logits, moe_aux_loss
 
-x = Model(vocab_size=50000, hidden_dim=512, max_seq_length=1024).to(device)
-total_params = sum(p.numel() for p in x.parameters())
-print(total_params)
+    @torch.no_grad()
+    def generate(self, x, max_new_tokens, temperature=1.0, top_k=None):
+        if temperature < 0:
+            raise ValueError("temperature must be non-negative")
+        if top_k is not None and top_k <= 0:
+            raise ValueError("top_k must be positive")
+
+        was_training = self.training
+        self.eval()
+
+        try:
+            if x.dim() == 1:
+                x = x.unsqueeze(0)
+
+            x = x.to(next(self.parameters()).device).long()
+
+            for _ in range(max_new_tokens):
+                x_context = x[:, -self.max_seq_length:]
+                logits, _ = self(x_context)
+                next_token_logits = logits[:, -1, :]
+
+                if temperature == 0:
+                    next_token = torch.argmax(next_token_logits, dim=-1, keepdim=True)
+                else:
+                    next_token_logits = next_token_logits / temperature
+
+                    if top_k is not None:
+                        sample_top_k = min(top_k, next_token_logits.size(-1))
+                        values, _ = torch.topk(next_token_logits, sample_top_k)
+                        next_token_logits[next_token_logits < values[:, [-1]]] = -float("inf")
+
+                    probs = F.softmax(next_token_logits, dim=-1)
+                    next_token = torch.multinomial(probs, num_samples=1)
+                if next_token == 50256:   #EOS token
+                    return x
+
+                x = torch.cat((x, next_token), dim=1)
+
+            return x
+
+        finally:
+            if was_training:
+                self.train()
