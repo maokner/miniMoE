@@ -1,12 +1,7 @@
+from attr import dataclass
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-
-device = "cpu"
-if torch.cuda.is_available():
-    device = "cuda"
-elif torch.backends.mps.is_available():
-    device = "mps"
 
 class Expert(nn.Module):
     def __init__(self, dim, hidden_dim):
@@ -99,19 +94,19 @@ class TransformerMoEBlock(nn.Module):
 
 
 class Model(torch.nn.Module):
-    def __init__(self, vocab_size, hidden_dim, max_seq_length=1024):
+    def __init__(self, config):
         super(Model, self).__init__()
-        self.max_seq_length = max_seq_length
-        self.token_embedding = nn.Embedding(vocab_size, hidden_dim)
-        self.positional_embedding = nn.Embedding(max_seq_length, hidden_dim)
-        self.output_projection = nn.Linear(hidden_dim, vocab_size)
-        self.MoEBlocks = nn.ModuleList([TransformerMoEBlock(hidden_dim) for _ in range(8)])
-        self.final_norm = nn.LayerNorm(hidden_dim)
+        self.config = config
+        self.max_seq_length = config.max_seq_length
+        self.token_embedding = nn.Embedding(config.vocab_size, config.hidden_dim)
+        self.positional_embedding = nn.Embedding(self.max_seq_length, config.hidden_dim)
+        self.output_projection = nn.Linear(config.hidden_dim, config.vocab_size)
+        self.MoEBlocks = nn.ModuleList([TransformerMoEBlock(config.hidden_dim) for _ in range(config.num_layers // 2)])
+        self.final_norm = nn.LayerNorm(config.hidden_dim)
+        self.moe_multiplier = config.moe_multiplier
 
 
-
-
-    def forward(self, x):
+    def forward(self, x, y=None):
         # X = [Batch size, Sequence length ] need to convert to [batch size, Sequence length, hidden_dim] for attention
         x = x.long()  # Ensure input is of type long for embedding
         x = self.token_embedding(x) # [Batch size, Sequence length, hidden_dim]
@@ -122,17 +117,20 @@ class Model(torch.nn.Module):
 
         causal_mask = torch.triu(torch.ones(T, T, device=x.device, dtype=torch.bool), diagonal=1)
 
+
         aux_losses = []
 
         for block in self.MoEBlocks:
             x, aux_loss = block(x, causal_mask=causal_mask)
             aux_losses.append(aux_loss)
         moe_aux_loss = torch.stack(aux_losses).mean()
-
         x = self.final_norm(x)
-
         logits = self.output_projection(x)
-        return logits, moe_aux_loss
+
+        if y is not None:
+            cross_loss = F.cross_entropy(logits.view(-1, logits.size(-1)), y.view(-1))
+            return logits, cross_loss + moe_aux_loss * self.moe_multiplier
+        return logits, None
 
     @torch.no_grad()
     def generate(self, x, max_new_tokens, temperature=1.0, top_k=None):
@@ -177,3 +175,11 @@ class Model(torch.nn.Module):
         finally:
             if was_training:
                 self.train()
+
+@dataclass
+class ModelConfig:
+    max_seq_length: int = 1024 # max sequence length
+    vocab_size: int = 50257 # number of tokens: 50,000 BPE merges + 256 bytes tokens + 1  token
+    num_layers: int = 12 # number of layers
+    hidden_dim: int = 768 # embedding dimension
+    moe_multiplier: float = 0.01 # moe aux loss multiplier
