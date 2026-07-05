@@ -1,4 +1,6 @@
 datasets
 numpy
+requests
 tiktoken
+torch
 tqdm

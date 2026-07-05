@@ -45,10 +45,13 @@ class MoEFeedForward(nn.Module):
         batch_size, seq_len, dim = x.shape
         num_tokens = batch_size * seq_len
 
-        router_logits = self.router(x)  # [batch_size, sequence_length, num_experts]
-        router_probs = F.softmax(router_logits, dim=-1)  # [batch_size, sequence_length, num_experts]
-        topk_logits, topk_indices = torch.topk(router_logits, k=self.top_k, dim=-1)
-        topk_weights = F.softmax(topk_logits, dim=-1)
+        # Router runs in float32 even under autocast: routing decisions and the
+        # aux loss are sensitive to bf16 rounding (ST-MoE keeps the router in fp32).
+        with torch.autocast(device_type=x.device.type, enabled=False):
+            router_logits = self.router(x.float())  # [batch_size, sequence_length, num_experts]
+            router_probs = F.softmax(router_logits, dim=-1)  # [batch_size, sequence_length, num_experts]
+            topk_logits, topk_indices = torch.topk(router_logits, k=self.top_k, dim=-1)
+            topk_weights = F.softmax(topk_logits, dim=-1)
 
         flat_x = x.reshape(num_tokens, dim)  # [batch_size * sequence_length, input_dim]
 
@@ -65,15 +68,15 @@ class MoEFeedForward(nn.Module):
             selected = (flat_topk_indices == expert_id)
             token_ids, topk_slots = torch.where(selected)
 
-            if token_ids.numel() == 0:
-                continue
-
+            # Run the expert even on zero tokens: skipping it would leave its
+            # parameters out of the autograd graph, which makes DDP with
+            # find_unused_parameters=False error out mid-training.
             expert_input = flat_x[token_ids]
             expert_output = expert(expert_input)
             routing_weights = flat_topk_weights[token_ids, topk_slots].unsqueeze(-1)
-            weighted_output = routing_weights * expert_output
+            weighted_output = routing_weights.to(expert_output.dtype) * expert_output
 
-            flat_output = flat_output.index_add(0, token_ids, weighted_output)
+            flat_output = flat_output.index_add(0, token_ids, weighted_output.to(flat_output.dtype))
 
         selected_mask = F.one_hot(topk_indices, num_classes=self.num_experts).float()
         load = selected_mask.sum(dim=2).mean(dim=(0, 1)) / self.top_k
@@ -221,17 +224,6 @@ class Model(nn.Module):
             {"params": decay_params, "weight_decay": weight_decay},
             {"params": no_decay_params, "weight_decay": 0.0},
         ]
-        """num_decay_params = sum(p.numel() for p in decay_params)
-        num_no_decay_params = sum(p.numel() for p in no_decay_params)
-        print(
-            f"Number of decayed tensors: {len(decay_params)} "
-            f"with {num_decay_params:,}, parameters"
-        )
-        print(
-            f"Number of non-decayed tensors: {len(no_decay_params)} "
-            f"with {num_no_decay_params:,} parameters"
-        )"""
-
         fused_available = "fused" in inspect.signature(torch.optim.AdamW).parameters
         use_fused = fused_available and "cuda" in device
         optimizer = torch.optim.AdamW(
