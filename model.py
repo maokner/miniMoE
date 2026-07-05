@@ -1,6 +1,6 @@
 import inspect
 
-from attr import dataclass
+from dataclasses import dataclass
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -125,7 +125,7 @@ class Model(nn.Module):
         self.positional_embedding = nn.Embedding(self.max_seq_length, config.hidden_dim)
         self.output_projection = nn.Linear(config.hidden_dim, config.vocab_size)
         self.MoEBlocks = nn.ModuleList(
-            [TransformerMoEBlock(config.hidden_dim, config.num_experts, config.top_k) for _ in range(config.num_layers // 2)]
+            [TransformerMoEBlock(config.hidden_dim, config.num_experts, config.top_k) for _ in range(config.num_layers)]
         )
         self.final_norm = nn.LayerNorm(config.hidden_dim)
         self.moe_multiplier = config.moe_multiplier
@@ -221,7 +221,7 @@ class Model(nn.Module):
             {"params": decay_params, "weight_decay": weight_decay},
             {"params": no_decay_params, "weight_decay": 0.0},
         ]
-        num_decay_params = sum(p.numel() for p in decay_params)
+        """num_decay_params = sum(p.numel() for p in decay_params)
         num_no_decay_params = sum(p.numel() for p in no_decay_params)
         print(
             f"Number of decayed tensors: {len(decay_params)} "
@@ -230,7 +230,7 @@ class Model(nn.Module):
         print(
             f"Number of non-decayed tensors: {len(no_decay_params)} "
             f"with {num_no_decay_params:,} parameters"
-        )
+        )"""
 
         fused_available = "fused" in inspect.signature(torch.optim.AdamW).parameters
         use_fused = fused_available and "cuda" in device
@@ -248,7 +248,7 @@ class Model(nn.Module):
 class ModelConfig:
     max_seq_length: int = 1024  # max sequence length
     vocab_size: int = 50304  # number of tokens: 50,000 BPE merges + 256 bytes tokens + 1 token
-    num_layers: int = 12  # number of layers
+    num_layers: int = 6  # number of transformer/MoE blocks
     hidden_dim: int = 768  # embedding dimension
     moe_multiplier: float = 0.01  # moe aux loss multiplier
     num_experts: int = 8  # number of experts
