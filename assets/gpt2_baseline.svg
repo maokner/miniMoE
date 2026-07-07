@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="500" viewBox="0 0 1040 500">
+<rect width="100%" height="100%" fill="white"/>
+<text x="42" y="48" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="26" font-weight="700" fill="#111827" text-anchor="start">miniMoE vs GPT-2 small</text>
+<text x="42" y="78" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="15" font-weight="400" fill="#64748b" text-anchor="start">Sparse capacity, active compute, and normalized HellaSwag accuracy</text>
+<text x="42" y="132" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="17" font-weight="700" fill="#111827" text-anchor="start">Total parameters</text>
+<text x="42" y="171" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#64748b" text-anchor="start">miniMoE</text>
+<rect x="150" y="154" width="607.5" height="22" rx="5" fill="#2563eb"/>
+<text x="771.5333333333333" y="171" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#111827" text-anchor="start">280.4M</text>
+<text x="42" y="203" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#64748b" text-anchor="start">GPT-2</text>
+<rect x="150" y="186" width="269.5" height="22" rx="5" fill="#059669"/>
+<text x="433.53333333333336" y="203" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#111827" text-anchor="start">124.4M</text>
+<text x="42" y="244" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="17" font-weight="700" fill="#111827" text-anchor="start">Active parameters per token</text>
+<text x="42" y="283" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#64748b" text-anchor="start">miniMoE</text>
+<rect x="150" y="266" width="512.6" height="22" rx="5" fill="#2563eb"/>
+<text x="676.5714285714286" y="283" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#111827" text-anchor="start">110.4M</text>
+<text x="42" y="315" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#64748b" text-anchor="start">GPT-2</text>
+<rect x="150" y="298" width="577.6" height="22" rx="5" fill="#059669"/>
+<text x="741.5714285714286" y="315" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#111827" text-anchor="start">124.4M</text>
+<text x="42" y="356" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="17" font-weight="700" fill="#111827" text-anchor="start">HellaSwag normalized accuracy</text>
+<text x="42" y="395" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#64748b" text-anchor="start">miniMoE</text>
+<rect x="150" y="378" width="507.8" height="22" rx="5" fill="#2563eb"/>
+<text x="671.8125" y="395" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#111827" text-anchor="start">31.2%</text>
+<text x="42" y="427" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#64748b" text-anchor="start">GPT-2</text>
+<rect x="150" y="410" width="480.2" height="22" rx="5" fill="#059669"/>
+<text x="644.1875" y="427" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" font-weight="400" fill="#111827" text-anchor="start">29.5%</text>
+</svg>
