@@ -98,12 +98,6 @@ Sample from the trained checkpoint:
 python sample.py -c minimoe_step_0019073.pt -p "Sparse expert language models"
 ```
 
-Regenerate the figures:
-
-```bash
-python scripts/plot_metrics.py --log train_log.csv --out-dir assets
-```
-
 ## Code Map
 
 | File | Role |
@@ -113,4 +107,3 @@ python scripts/plot_metrics.py --log train_log.csv --out-dir assets
 | `fineweb.py` | FineWeb-Edu tokenization and shard creation |
 | `hellaswag.py` | HellaSwag rendering and GPT-2 baseline evaluation |
 | `sample.py` | checkpoint loading and sampling |
-| `scripts/plot_metrics.py` | SVG figures from `train_log.csv` |
