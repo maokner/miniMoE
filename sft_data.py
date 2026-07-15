@@ -85,7 +85,12 @@ def build_split(hf_split, split, enc):
         return path
 
     for example in tqdm(ds, desc=f"{split}"):
-        tokens, is_target = render_conversation(example[MESSAGES_KEY], enc)
+        # Guard per-conversation: one malformed row must never abort the split.
+        try:
+            tokens, is_target = render_conversation(example[MESSAGES_KEY], enc)
+        except Exception:
+            skipped += 1
+            continue
         if tokens is None:
             skipped += 1
             continue

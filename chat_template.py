@@ -25,6 +25,14 @@ A message is a dict {"role": "system"|"user"|"assistant", "content": str}.
 EOS_TOKEN_ID = 50256
 
 
+def _encode(enc, text):
+    # Encode as ordinary text. disallowed_special=() stops tiktoken from raising
+    # when message content literally contains "<|endoftext|>" (or other special
+    # token strings): we want those encoded as plain characters, never as a real
+    # EOS that would inject a spurious document/turn boundary into the data.
+    return enc.encode(text, disallowed_special=())
+
+
 def _user_prompt(content):
     # The prefix the model is conditioned on (masked out of the SFT loss). The
     # trailing "Assistant:" with no space is exactly what we generate from.
@@ -52,7 +60,7 @@ def render_conversation(messages, enc):
     # A leading system message becomes a masked "System: ..." preamble.
     idx = 0
     if messages and messages[0]["role"] == "system":
-        for tok in enc.encode(_system_prefix(messages[0]["content"])):
+        for tok in _encode(enc, _system_prefix(messages[0]["content"])):
             tokens.append(tok)
             is_target.append(0)
         idx = 1
@@ -69,12 +77,12 @@ def render_conversation(messages, enc):
                 # Assistant turn with no preceding user turn: skip, it would
                 # teach the model to speak unprompted.
                 continue
-            for tok in enc.encode(_user_prompt(pending_user)):
+            for tok in _encode(enc, _user_prompt(pending_user)):
                 tokens.append(tok)
                 is_target.append(0)
             # The leading space is part of the completion so the model learns
             # to produce it; content + terminal EOS are the supervised targets.
-            for tok in enc.encode(f" {content.strip()}"):
+            for tok in _encode(enc, f" {content.strip()}"):
                 tokens.append(tok)
                 is_target.append(1)
             tokens.append(EOS_TOKEN_ID)
@@ -95,7 +103,7 @@ def build_inference_prompt(history, user_message, enc):
     generate(). Mirrors render_conversation exactly.
     """
     ids = list(history) if history else [EOS_TOKEN_ID]
-    ids += enc.encode(_user_prompt(user_message))
+    ids += _encode(enc, _user_prompt(user_message))
     return ids
 
 
@@ -106,7 +114,7 @@ def append_reply(history, user_message, reply, enc):
     the user prompt, a leading-space reply, and the terminating EOS.
     """
     ids = list(history) if history else [EOS_TOKEN_ID]
-    ids += enc.encode(_user_prompt(user_message))
-    ids += enc.encode(f" {reply.strip()}")
+    ids += _encode(enc, _user_prompt(user_message))
+    ids += _encode(enc, f" {reply.strip()}")
     ids.append(EOS_TOKEN_ID)
     return ids
