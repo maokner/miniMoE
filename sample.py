@@ -25,6 +25,7 @@ import sys
 import tiktoken
 import torch
 
+from chat_template import append_reply, build_inference_prompt
 from model import Model, ModelConfig
 
 EOS_TOKEN_ID = 50256
@@ -224,6 +225,48 @@ def chat_repl(model, config, device, enc, args):
         history += enc.encode(f" {reply.strip()}\n")
 
 
+def sft_chat_repl(model, config, device, enc, args):
+    """Chat with an SFT'd checkpoint using the canonical training template.
+
+    Unlike --chat (a thin wrapper around the base model), this assumes the model
+    was fine-tuned with chat_template.py: it formats turns identically and relies
+    on the model emitting EOS to end its turn, which generate() already honors.
+    """
+    print(
+        "miniMoE - SFT chat mode. Type a message; the assistant will reply.\n"
+        "Commands: /reset to clear history, /exit to quit.\n",
+        file=sys.stderr,
+    )
+    history = []
+    while True:
+        try:
+            user = input("User: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return
+        if user in {"/exit", "/quit"}:
+            return
+        if user == "/reset":
+            history = []
+            print("(history cleared)", file=sys.stderr)
+            continue
+        if not user:
+            continue
+
+        prompt_ids = build_inference_prompt(history, user, enc)
+        prompt_ids = prompt_ids[-config.max_seq_length:]  # keep within context
+
+        sys.stdout.write("Assistant:")
+        sys.stdout.flush()
+        reply = generate(
+            model, config, device, enc, prompt_ids,
+            args.max_new_tokens, args.temperature, args.top_k,
+            stop_ids=None, stream=True,
+        )
+        history = append_reply(history, user, reply, enc)
+        history = history[-config.max_seq_length:]
+
+
 def parse_args():
     p = argparse.ArgumentParser(description="Sample from a miniMoE checkpoint.")
     p.add_argument("-c", "--checkpoint", default="minimoe_step_0019073.pt",
@@ -232,6 +275,8 @@ def parse_args():
                    help="Run once on this prompt and exit (non-interactive).")
     p.add_argument("--chat", action="store_true",
                    help="Conversational wrapper instead of raw completion.")
+    p.add_argument("--sft", action="store_true",
+                   help="Chat with an SFT'd checkpoint using the training template.")
     p.add_argument("--max-new-tokens", type=int, default=256)
     p.add_argument("--temperature", type=float, default=0.8,
                    help="0 = greedy/deterministic; higher = more random.")
@@ -271,7 +316,9 @@ def main():
         )
         return
 
-    if args.chat:
+    if args.sft:
+        sft_chat_repl(model, config, device, enc, args)
+    elif args.chat:
         chat_repl(model, config, device, enc, args)
     else:
         completion_repl(model, config, device, enc, args)
