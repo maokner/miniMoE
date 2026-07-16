@@ -8,7 +8,7 @@ It does not train models, recreate baselines, or invoke an external inference se
 Use a Linux host with an NVIDIA GPU, a working driver, Python 3, Git, and internet access.
 
 ```bash
-git clone https://github.com/mokner123/miniMoE.git
+git clone https://github.com/maokner/miniMoE.git
 cd miniMoE
 bash scripts/prepare_gpu.sh
 ```
