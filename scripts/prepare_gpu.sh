@@ -28,7 +28,7 @@ if [[ ! -x .venv/bin/python ]]; then
 fi
 PYTHON="$ROOT/.venv/bin/python"
 "$PYTHON" -m pip install --upgrade pip
-"$PYTHON" -m pip install -r requirements.txt -r requirements-eval.txt
+"$PYTHON" -m pip install -r requirements.txt
 
 "$PYTHON" - <<'PY'
 import torch

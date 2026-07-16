@@ -4,3 +4,8 @@ requests
 tiktoken
 torch
 tqdm
+
+# evaluation and dev
+matplotlib>=3.8
+pytest>=8.0
+ruff>=0.6

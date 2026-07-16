@@ -27,7 +27,7 @@ REQUIRED_CATEGORIES = {
 
 
 def default_manifest_path() -> Path:
-    return Path(__file__).resolve().parents[1] / "experiments" / "prompts.json"
+    return Path(__file__).resolve().parent / "prompts.json"
 
 
 def load_manifest(path: str | Path | None = None) -> dict[str, Any]:
