@@ -3,12 +3,15 @@
 Supervised fine-tuning of the pretrained miniMoE base checkpoint into a small
 instruction-following chat model.
 
-This runs on a **single rented GPU** (one A100 40GB, or a 24GB card like a 4090/L4
-is plenty for a 280M model). It does **not** run on the 8GB M1 the base model was
-sampled on - SFT needs params + gradients + AdamW state + activations, several
-times the memory that inference alone already saturates locally.
+This trains on rented NVIDIA GPUs via DDP (`torchrun`). It scales cleanly across
+GPUs; two configs that both finish 2 epochs comfortably inside a few hours:
 
-Expect the whole run to finish in well under an hour and cost a couple of dollars.
+- **2x A100 80GB** - `BATCH_SIZE=64` per GPU, simplest and most headroom.
+- **4x A6000 48GB** - `BATCH_SIZE=32` per GPU, similar throughput, usually cheaper.
+
+A single GPU also works (drop `torchrun`), just slower. It does **not** run on the
+8GB M1 the base model was sampled on - SFT needs params + gradients + AdamW state +
+activations, several times the memory inference alone already saturates locally.
 
 ## What SFT does here
 
@@ -22,8 +25,10 @@ simple instruction-following, not a real assistant.
 
 ```bash
 pip install -r requirements.txt
-# Copy the base checkpoint up to the box (3.4 GB):
-#   scp minimoe_step_0019073.pt user@box:/workspace/miniMoE/
+# Fetch the base checkpoint (3.4 GB) from the HF model repo (note /resolve/):
+wget -O minimoe_step_0019073.pt \
+  https://huggingface.co/mokner123/miniMoE/resolve/main/minimoe_step_0019073.pt
+ls -lh minimoe_step_0019073.pt   # must read ~3.4G, not a few KB
 ```
 
 ## 1. Prepare the SFT data
@@ -45,19 +50,38 @@ DATASET=HuggingFaceTB/smoltalk DATASET_CONFIG=all python sft_data.py   # larger,
 Sanity check the printed summary: the "supervised %" is the fraction of tokens
 that carry loss (assistant content). For smol-smoltalk this is typically ~40-55%.
 
-## 2. Run SFT
+## 2. Run SFT (DDP)
 
+**2x A100 80GB:**
 ```bash
-BASE_CHECKPOINT=minimoe_step_0019073.pt python sft_train.py
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+EPOCHS=2 BATCH_SIZE=64 GRAD_ACCUM_STEPS=1 \
+BASE_CHECKPOINT=minimoe_step_0019073.pt \
+  torchrun --standalone --nproc_per_node=2 sft_train.py
 ```
 
-Defaults (override with env vars): 3 epochs, `MAX_LR=2e-5` with cosine decay,
-`WARMUP_STEPS=50`, `BATCH_SIZE=16`, `GRAD_ACCUM_STEPS=4`, bf16 autocast +
-`torch.compile` on CUDA. Loss on assistant tokens only.
+**4x A6000 48GB:**
+```bash
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+EPOCHS=2 BATCH_SIZE=32 GRAD_ACCUM_STEPS=1 \
+BASE_CHECKPOINT=minimoe_step_0019073.pt \
+  torchrun --standalone --nproc_per_node=4 sft_train.py
+```
 
-Checkpoints land in `checkpoints/`: one per epoch
-(`minimoe_sft_epoch{N}.pt`) plus a final `minimoe_sft.pt`. They use the same
+`--nproc_per_node` must equal your GPU count. The effective batch is
+`BATCH_SIZE * GRAD_ACCUM_STEPS * nproc_per_node`; each GPU owns a disjoint,
+reshuffled slice of the data, so more GPUs means fewer optimizer steps per epoch
+and proportionally less wall time.
+
+Other defaults (override with env vars): `MAX_LR=2e-5` cosine decay,
+`WARMUP_STEPS=50`, bf16 autocast + `torch.compile` on CUDA. Loss on assistant
+tokens only. Single GPU: drop `torchrun` and run `python sft_train.py`.
+
+Checkpoints land in `checkpoints/`: one per epoch (`minimoe_sft_epoch{N}.pt`)
+plus a final `minimoe_sft.pt`, written by the master rank only. They use the same
 format as the base checkpoint, so `sample.py` loads them directly.
+
+If a GPU OOMs, lower `BATCH_SIZE` (e.g. A6000 -> 24) and/or set `TORCH_COMPILE=0`.
 
 Watch `sft_log.csv` (or stdout): training loss should fall steadily and the
 periodic `val_loss` should track it. If val loss turns up while train loss keeps

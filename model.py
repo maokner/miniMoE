@@ -165,7 +165,16 @@ class Model(nn.Module):
         logits = self.output_projection(x)
 
         if y is not None:
-            cross_loss = F.cross_entropy(logits.view(-1, logits.size(-1)), y.view(-1))
+            # Sum-reduce and divide by the valid (non-ignored) token count instead
+            # of reduction="mean". This is numerically identical whenever any target
+            # is supervised, but returns 0 (not NaN) if a batch happens to be fully
+            # masked (all -100) - which can occur with prompt-masked SFT data. A NaN
+            # here would spread through the DDP all-reduce and destroy the run.
+            flat_logits = logits.view(-1, logits.size(-1))
+            flat_y = y.view(-1)
+            cross_loss = F.cross_entropy(flat_logits, flat_y, reduction="sum")
+            valid = (flat_y != -100).sum().clamp(min=1)
+            cross_loss = cross_loss / valid
             return logits, cross_loss + moe_aux_loss * self.moe_multiplier
         return logits, None
 
