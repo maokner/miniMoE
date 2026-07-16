@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 300" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <rect x="0.5" y="0.5" width="1079" height="299" rx="16" fill="#ffffff" stroke="#e6e8eb"/>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8b93a1"/>
+    </marker>
+  </defs>
+
+  <!-- repeated-block bracket -->
+  <text x="566" y="14" text-anchor="middle" font-size="12" fill="#6b7280">repeated 6 times</text>
+  <path d="M256 22 h620" fill="none" stroke="#d7dbe0" stroke-width="1.2"/>
+  <path d="M256 22 v8 M876 22 v8" stroke="#d7dbe0" stroke-width="1.2"/>
+
+  <!-- token -->
+  <rect x="18" y="127" width="80" height="46" rx="8" fill="#f4f5f7" stroke="#cfd4da"/>
+  <text x="58" y="154" text-anchor="middle" font-size="14" fill="#1f2937">token</text>
+  <line x1="98" y1="150" x2="124" y2="150" stroke="#8b93a1" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- embedding -->
+  <rect x="124" y="127" width="106" height="46" rx="8" fill="#f4f5f7" stroke="#cfd4da"/>
+  <text x="177" y="149" text-anchor="middle" font-size="14" fill="#1f2937">Embedding</text>
+  <text x="177" y="165" text-anchor="middle" font-size="11" fill="#6b7280">+ position</text>
+  <line x1="230" y1="150" x2="256" y2="150" stroke="#8b93a1" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- self-attention (shared) -->
+  <rect x="256" y="118" width="126" height="64" rx="8" fill="#f4f5f7" stroke="#cfd4da"/>
+  <text x="319" y="146" text-anchor="middle" font-size="14" fill="#1f2937">Self-Attention</text>
+  <text x="319" y="164" text-anchor="middle" font-size="11" fill="#6b7280">shared</text>
+  <line x1="382" y1="150" x2="404" y2="150" stroke="#8b93a1" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- router -->
+  <rect x="404" y="118" width="100" height="64" rx="8" fill="#f4f5f7" stroke="#cfd4da"/>
+  <text x="454" y="146" text-anchor="middle" font-size="14" fill="#1f2937">Router</text>
+  <text x="454" y="164" text-anchor="middle" font-size="11" fill="#6b7280">top-2 of 8</text>
+
+  <!-- fan from router to experts (active paths accented) -->
+  <g fill="none" stroke-width="1.4">
+    <path d="M504 150 C 536 150, 540 45, 566 45" stroke="#c3c9d0"/>
+    <path d="M504 150 C 536 150, 540 75, 566 75" stroke="#2f6feb" stroke-width="1.8"/>
+    <path d="M504 150 C 536 150, 540 105, 566 105" stroke="#c3c9d0"/>
+    <path d="M504 150 C 536 150, 540 135, 566 135" stroke="#c3c9d0"/>
+    <path d="M504 150 C 536 150, 540 165, 566 165" stroke="#2f6feb" stroke-width="1.8"/>
+    <path d="M504 150 C 536 150, 540 195, 566 195" stroke="#c3c9d0"/>
+    <path d="M504 150 C 536 150, 540 225, 566 225" stroke="#c3c9d0"/>
+    <path d="M504 150 C 536 150, 540 255, 566 255" stroke="#c3c9d0"/>
+  </g>
+
+  <!-- 8 experts, evenly spaced (30px pitch), centered on the router -->
+  <g font-size="12.5">
+    <rect x="566" y="33" width="150" height="24" rx="6" fill="#f4f5f7" stroke="#d7dbe0"/>
+    <text x="641" y="49" text-anchor="middle" fill="#6b7280">Expert 1</text>
+    <rect x="566" y="63" width="150" height="24" rx="6" fill="#e0edff" stroke="#2f6feb"/>
+    <text x="641" y="79" text-anchor="middle" fill="#123a86">Expert 2 · active</text>
+    <rect x="566" y="93" width="150" height="24" rx="6" fill="#f4f5f7" stroke="#d7dbe0"/>
+    <text x="641" y="109" text-anchor="middle" fill="#6b7280">Expert 3</text>
+    <rect x="566" y="123" width="150" height="24" rx="6" fill="#f4f5f7" stroke="#d7dbe0"/>
+    <text x="641" y="139" text-anchor="middle" fill="#6b7280">Expert 4</text>
+    <rect x="566" y="153" width="150" height="24" rx="6" fill="#e0edff" stroke="#2f6feb"/>
+    <text x="641" y="169" text-anchor="middle" fill="#123a86">Expert 5 · active</text>
+    <rect x="566" y="183" width="150" height="24" rx="6" fill="#f4f5f7" stroke="#d7dbe0"/>
+    <text x="641" y="199" text-anchor="middle" fill="#6b7280">Expert 6</text>
+    <rect x="566" y="213" width="150" height="24" rx="6" fill="#f4f5f7" stroke="#d7dbe0"/>
+    <text x="641" y="229" text-anchor="middle" fill="#6b7280">Expert 7</text>
+    <rect x="566" y="243" width="150" height="24" rx="6" fill="#f4f5f7" stroke="#d7dbe0"/>
+    <text x="641" y="259" text-anchor="middle" fill="#6b7280">Expert 8</text>
+  </g>
+
+  <!-- merge from active experts to weighted sum -->
+  <g fill="none" stroke="#2f6feb" stroke-width="1.8">
+    <path d="M716 75 C 742 75, 746 150, 772 150"/>
+    <path d="M716 165 C 742 165, 746 150, 772 150"/>
+  </g>
+
+  <!-- weighted sum -->
+  <rect x="772" y="118" width="104" height="64" rx="8" fill="#f4f5f7" stroke="#cfd4da"/>
+  <text x="824" y="146" text-anchor="middle" font-size="14" fill="#1f2937">Weighted</text>
+  <text x="824" y="164" text-anchor="middle" font-size="14" fill="#1f2937">sum</text>
+  <line x1="876" y1="150" x2="902" y2="150" stroke="#8b93a1" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- output -->
+  <rect x="902" y="127" width="96" height="46" rx="8" fill="#f4f5f7" stroke="#cfd4da"/>
+  <text x="950" y="149" text-anchor="middle" font-size="14" fill="#1f2937">logits</text>
+  <text x="950" y="165" text-anchor="middle" font-size="11" fill="#6b7280">tied head</text>
+</svg>
