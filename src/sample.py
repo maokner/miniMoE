@@ -9,13 +9,13 @@ feels conversational, but expect completion-style behavior, not a real assistant
 
 Examples:
     # interactive text completion
-    python sample.py -c minimoe_step_0019073.pt
+    python src/sample.py -c minimoe_step_0019073.pt
 
     # interactive "chat"
-    python sample.py -c minimoe_step_0019073.pt --chat
+    python src/sample.py -c minimoe_step_0019073.pt --chat
 
     # one-shot, good for quick tests / scripting
-    python sample.py -c minimoe_step_0019073.pt -p "The mitochondria is"
+    python src/sample.py -c minimoe_step_0019073.pt -p "The mitochondria is"
 """
 import argparse
 import glob

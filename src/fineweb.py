@@ -3,7 +3,7 @@ FineWeb-Edu dataset (for srs pretraining)
 https://huggingface.co/datasets/HuggingFaceFW/fineweb-edu
 Downloads and tokenizes the data and saves data shards to disk.
 Run simply as:
-$ python fineweb.py
+$ python src/fineweb.py
 Will save shards to the local directory "edu_fineweb10B".
 The first 50M tokens are validation, the next 50M are test, and the rest are train.
 """
@@ -24,7 +24,8 @@ test_tokens = int(os.environ.get("TEST_TOKENS", int(5e7)))
 assert val_tokens + test_tokens <= shard_size, "val_tokens + test_tokens must fit in the first shard"
 
 # create the cache the local directory if it doesn't exist yet
-DATA_CACHE_DIR = os.path.join(os.path.dirname(__file__), local_dir)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_CACHE_DIR = os.path.join(REPO_ROOT, local_dir)
 os.makedirs(DATA_CACHE_DIR, exist_ok=True)
 
 # download the dataset

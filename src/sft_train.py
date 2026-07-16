@@ -17,11 +17,11 @@ slice of the packed blocks, so one pass over the data is split across GPUs.
 The effective batch is BATCH_SIZE * GRAD_ACCUM_STEPS * world_size.
 
 Single GPU:
-    BASE_CHECKPOINT=minimoe_step_0019073.pt python sft_train.py
+    BASE_CHECKPOINT=minimoe_step_0019073.pt python src/sft_train.py
 
 Multi-GPU (e.g. 2 GPUs):
     BASE_CHECKPOINT=minimoe_step_0019073.pt \
-      torchrun --standalone --nproc_per_node=2 sft_train.py
+      torchrun --standalone --nproc_per_node=2 src/sft_train.py
 
 Config via env vars (see the block in main()).
 """
@@ -82,7 +82,7 @@ class SFTBlockLoader:
         tok_files = sorted(glob.glob(os.path.join(data_dir, f"sft_{split}_*_tokens.npy")))
         if not tok_files:
             raise FileNotFoundError(
-                f"No SFT {split} shards in {data_dir}. Run sft_data.py first."
+                f"No SFT {split} shards in {data_dir}. Run src/sft_data.py first."
             )
 
         self.token_shards = []

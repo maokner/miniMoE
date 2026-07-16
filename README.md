@@ -4,7 +4,7 @@ A 280M-parameter sparse Mixture-of-Experts language model, pretrained from scrat
 
 **[Weights on Hugging Face](https://huggingface.co/mokner123/miniMoE)**
 
-![miniMoE architecture](assets/architecture.svg)
+![miniMoE architecture](assets/architecture.png)
 
 Every feed-forward block holds 8 experts; each token routes to only 2.
 The model carries 280M parameters but spends 110M per token.
@@ -51,25 +51,26 @@ HellaSwag is a 32-example in-training probe, not a full benchmark.
 ```bash
 pip install -r requirements.txt
 
-python sample.py -c minimoe_step_0019073.pt -p "Sparse expert models"   # base, completion
-python sample.py -c minimoe_sft.pt --sft                                # tuned, chat
+python src/sample.py -c minimoe_step_0019073.pt -p "Sparse expert models"   # base, completion
+python src/sample.py -c minimoe_sft.pt --sft                                # tuned, chat
 ```
 
 Train from scratch:
 
 ```bash
-python fineweb.py && torchrun --standalone --nproc_per_node=8 train.py                              # pretrain
-python sft_data.py && EPOCHS=2 BATCH_SIZE=64 GRAD_ACCUM_STEPS=1 torchrun --standalone --nproc_per_node=2 sft_train.py  # SFT
+python src/fineweb.py && torchrun --standalone --nproc_per_node=8 src/train.py                              # pretrain
+python src/sft_data.py && EPOCHS=2 BATCH_SIZE=64 GRAD_ACCUM_STEPS=1 torchrun --standalone --nproc_per_node=2 src/sft_train.py  # SFT
 ```
 
 ## Files
 
 | File | Role |
 |---|---|
-| `model.py` | MoE transformer, router, generation |
-| `train.py` | pretraining loop |
-| `sft_train.py` | instruction-tuning loop |
-| `sft_data.py`, `chat_template.py` | chat data prep and shared chat format |
-| `fineweb.py` | FineWeb-Edu tokenization |
-| `hellaswag.py` | HellaSwag evaluation |
-| `sample.py` | sampling, base completion and `--sft` chat |
+| `src/model.py` | MoE transformer, router, generation |
+| `src/train.py` | pretraining loop |
+| `src/sft_train.py` | instruction-tuning loop |
+| `src/sft_data.py`, `src/chat_template.py` | chat data prep and shared chat format |
+| `src/fineweb.py` | FineWeb-Edu tokenization |
+| `src/hellaswag.py` | HellaSwag evaluation |
+| `src/sample.py` | sampling, base completion and `--sft` chat |
+| `assets/`, `scripts/` | diagrams and the SFT runbook |

@@ -33,7 +33,8 @@ import torch
 from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------
-DATA_CACHE_DIR = os.path.join(os.path.dirname(__file__), "hellaswag")
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_CACHE_DIR = os.path.join(REPO_ROOT, "hellaswag")
 
 def download_file(url: str, fname: str, chunk_size=1024):
     """Helper function to download a file from a given url"""

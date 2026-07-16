@@ -55,7 +55,7 @@ class FineWebTokenLoader:
         self.files = sorted(glob.glob(pattern))
         if not self.files:
             raise FileNotFoundError(
-                f"No FineWeb {split} shards found at {pattern}. Run fineweb.py first."
+                f"No FineWeb {split} shards found at {pattern}. Run src/fineweb.py first."
             )
 
         self.current_shard = 0

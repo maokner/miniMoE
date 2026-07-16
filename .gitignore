@@ -2,6 +2,8 @@ __pycache__/
 .DS_Store
 checkpoints/
 train_log.csv
+sft_log.csv
 edu_fineweb10B/
 hellaswag/
+sft_data/
 *.pt

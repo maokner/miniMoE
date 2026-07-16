@@ -22,7 +22,7 @@ Defaults target HuggingFaceTB/smol-smoltalk, the small-model variant of SmolTalk
 (what SmolLM2-360M was tuned on), which is a good fit for a model this size.
 Override with env vars, e.g.:
 
-    DATASET=HuggingFaceTB/smoltalk DATASET_CONFIG=all python sft_data.py
+    DATASET=HuggingFaceTB/smoltalk DATASET_CONFIG=all python src/sft_data.py
 """
 import os
 

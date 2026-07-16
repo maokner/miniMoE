@@ -38,13 +38,13 @@ renders it with the canonical chat template, masks everything but assistant
 tokens, and packs 1024-token shards into `sft_data/`.
 
 ```bash
-python sft_data.py
+python src/sft_data.py
 ```
 
 Swap the dataset with env vars if you want a different behavior mix:
 
 ```bash
-DATASET=HuggingFaceTB/smoltalk DATASET_CONFIG=all python sft_data.py   # larger, broader
+DATASET=HuggingFaceTB/smoltalk DATASET_CONFIG=all python src/sft_data.py   # larger, broader
 ```
 
 Sanity check the printed summary: the "supervised %" is the fraction of tokens
@@ -57,7 +57,7 @@ that carry loss (assistant content). For smol-smoltalk this is typically ~40-55%
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 EPOCHS=2 BATCH_SIZE=64 GRAD_ACCUM_STEPS=1 \
 BASE_CHECKPOINT=minimoe_step_0019073.pt \
-  torchrun --standalone --nproc_per_node=2 sft_train.py
+  torchrun --standalone --nproc_per_node=2 src/sft_train.py
 ```
 
 **4x A6000 48GB:**
@@ -65,7 +65,7 @@ BASE_CHECKPOINT=minimoe_step_0019073.pt \
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 EPOCHS=2 BATCH_SIZE=32 GRAD_ACCUM_STEPS=1 \
 BASE_CHECKPOINT=minimoe_step_0019073.pt \
-  torchrun --standalone --nproc_per_node=4 sft_train.py
+  torchrun --standalone --nproc_per_node=4 src/sft_train.py
 ```
 
 `--nproc_per_node` must equal your GPU count. The effective batch is
@@ -75,11 +75,11 @@ and proportionally less wall time.
 
 Other defaults (override with env vars): `MAX_LR=2e-5` cosine decay,
 `WARMUP_STEPS=50`, bf16 autocast + `torch.compile` on CUDA. Loss on assistant
-tokens only. Single GPU: drop `torchrun` and run `python sft_train.py`.
+tokens only. Single GPU: drop `torchrun` and run `python src/sft_train.py`.
 
 Checkpoints land in `checkpoints/`: one per epoch (`minimoe_sft_epoch{N}.pt`)
 plus a final `minimoe_sft.pt`, written by the master rank only. They use the same
-format as the base checkpoint, so `sample.py` loads them directly.
+format as the base checkpoint, so `src/sample.py` loads them directly.
 
 If a GPU OOMs, lower `BATCH_SIZE` (e.g. A6000 -> 24) and/or set `TORCH_COMPILE=0`.
 
@@ -93,7 +93,7 @@ epochs / lower LR.
 Pull a checkpoint back down (or sample on the box) and chat with the SFT template:
 
 ```bash
-python sample.py -c checkpoints/minimoe_sft.pt --sft
+python src/sample.py -c checkpoints/minimoe_sft.pt --sft
 ```
 
 ```
