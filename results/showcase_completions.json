@@ -1,5 +1,4 @@
 {
-  "note": "Hand-picked showcase generations selected for quality; not a random sample. Each record keeps its full unedited output and exact decoding settings. The committed deterministic prompt suite is in prompt_outputs.json.",
   "samples": [
     {
       "checkpoint": "sft",
