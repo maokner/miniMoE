@@ -1,4 +1,5 @@
 __pycache__/
+.venv/
 .DS_Store
 checkpoints/
 train_log.csv
@@ -7,3 +8,5 @@ edu_fineweb10B/
 hellaswag/
 sft_data/
 *.pt
+results/.parts/
+results/**/*.tmp

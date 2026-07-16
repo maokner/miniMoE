@@ -39,8 +39,19 @@ class MoEFeedForward(nn.Module):
             [Expert(input_dim, hidden_dim) for _ in range(num_experts)]
         )
         self.router = nn.Linear(input_dim, num_experts, bias=False)
+        self.layer_index = -1
+        self.routing_mode = "learned_top2"
+        self.routing_observer = None
 
-    def forward(self, x):
+    def set_routing(self, mode="learned_top2", observer=None):
+        valid = {"learned_top2", "learned_top1", "random_top2", "uniform_all"}
+        valid.update(f"ablate_expert_{i}" for i in range(self.num_experts))
+        if mode not in valid:
+            raise ValueError(f"Unknown routing mode {mode!r}; expected one of {sorted(valid)}")
+        self.routing_mode = mode
+        self.routing_observer = observer
+
+    def forward(self, x, token_ids=None):
         # x = [batch_size, sequence_length, input_dim]
         batch_size, seq_len, dim = x.shape
         num_tokens = batch_size * seq_len
@@ -50,17 +61,55 @@ class MoEFeedForward(nn.Module):
         with torch.autocast(device_type=x.device.type, enabled=False):
             router_logits = self.router(x.float())  # [batch_size, sequence_length, num_experts]
             router_probs = F.softmax(router_logits, dim=-1)  # [batch_size, sequence_length, num_experts]
-            topk_logits, topk_indices = torch.topk(router_logits, k=self.top_k, dim=-1)
-            topk_weights = F.softmax(topk_logits, dim=-1)
+            if self.training and self.routing_mode != "learned_top2":
+                raise RuntimeError("Evaluation routing modes cannot be used while training")
+
+            if self.routing_mode == "learned_top2":
+                topk_logits, topk_indices = torch.topk(router_logits, k=self.top_k, dim=-1)
+                topk_weights = F.softmax(topk_logits, dim=-1)
+            elif self.routing_mode == "learned_top1":
+                topk_indices = torch.argmax(router_logits, dim=-1, keepdim=True)
+                topk_weights = torch.ones_like(topk_indices, dtype=router_probs.dtype)
+            elif self.routing_mode == "random_top2":
+                random_scores = torch.rand_like(router_probs)
+                topk_indices = torch.topk(random_scores, k=2, dim=-1).indices
+                topk_weights = torch.full_like(topk_indices, 0.5, dtype=router_probs.dtype)
+            elif self.routing_mode == "uniform_all":
+                shape = (*router_logits.shape[:-1], self.num_experts)
+                topk_indices = torch.arange(self.num_experts, device=x.device).expand(shape)
+                topk_weights = torch.full(shape, 1.0 / self.num_experts, device=x.device)
+            else:
+                ablated = int(self.routing_mode.rsplit("_", 1)[1])
+                learned_logits, learned_indices = torch.topk(router_logits, k=2, dim=-1)
+                keep = learned_indices != ablated
+                masked_logits = learned_logits.masked_fill(~keep, -float("inf"))
+                topk_weights = F.softmax(masked_logits, dim=-1)
+                both_removed = ~keep.any(dim=-1, keepdim=True)
+                topk_weights = torch.where(both_removed, torch.zeros_like(topk_weights), topk_weights)
+                topk_indices = learned_indices
+
+        active_k = topk_indices.size(-1)
+
+        if self.routing_observer is not None:
+            observed_tokens = token_ids
+            if observed_tokens is None:
+                observed_tokens = torch.full(x.shape[:2], -1, device=x.device, dtype=torch.long)
+            self.routing_observer(
+                self.layer_index,
+                observed_tokens.detach(),
+                topk_indices.detach(),
+                topk_weights.detach(),
+                router_probs.detach(),
+            )
 
         flat_x = x.reshape(num_tokens, dim)  # [batch_size * sequence_length, input_dim]
 
         flat_topk_indices = topk_indices.reshape(
-            num_tokens, self.top_k
-        )  # [batch_size * sequence_length, top_k]
+            num_tokens, active_k
+        )  # [batch_size * sequence_length, active routes]
         flat_topk_weights = topk_weights.reshape(
-            num_tokens, self.top_k
-        )  # [batch_size * sequence_length, top_k]
+            num_tokens, active_k
+        )  # [batch_size * sequence_length, active routes]
 
         flat_output = torch.zeros_like(flat_x)  # [batch_size * sequence_length, input_dim]
 
@@ -79,7 +128,7 @@ class MoEFeedForward(nn.Module):
             flat_output = flat_output.index_add(0, token_ids, weighted_output.to(flat_output.dtype))
 
         selected_mask = F.one_hot(topk_indices, num_classes=self.num_experts).float()
-        load = selected_mask.sum(dim=2).mean(dim=(0, 1)) / self.top_k
+        load = selected_mask.sum(dim=2).mean(dim=(0, 1)) / active_k
         importance = router_probs.mean(dim=(0, 1))
         aux_loss = self.num_experts * torch.sum(load * importance)
         output = flat_output.reshape(batch_size, seq_len, dim)  # [batch_size, sequence_length, input_dim]
@@ -99,7 +148,7 @@ class TransformerMoEBlock(nn.Module):
         self.attn_norm = nn.LayerNorm(hidden_dim)
         self.moe_norm = nn.LayerNorm(hidden_dim)
 
-    def forward(self, x, causal_mask=None):
+    def forward(self, x, causal_mask=None, token_ids=None):
         seq_len = x.size(1)
         if causal_mask is None:
             causal_mask = make_causal_mask(seq_len, x.device)
@@ -114,7 +163,7 @@ class TransformerMoEBlock(nn.Module):
         )
 
         x = x + attn_output  # Residual connection
-        moe_output, aux_loss = self.moe(self.moe_norm(x))
+        moe_output, aux_loss = self.moe(self.moe_norm(x), token_ids=token_ids)
         x = x + moe_output
         return x, aux_loss
 
@@ -130,6 +179,8 @@ class Model(nn.Module):
         self.MoEBlocks = nn.ModuleList(
             [TransformerMoEBlock(config.hidden_dim, config.num_experts, config.top_k) for _ in range(config.num_layers)]
         )
+        for layer_index, block in enumerate(self.MoEBlocks):
+            block.moe.layer_index = layer_index
         self.final_norm = nn.LayerNorm(config.hidden_dim)
         self.moe_multiplier = config.moe_multiplier
 
@@ -147,8 +198,8 @@ class Model(nn.Module):
 
     def forward(self, x, y=None):
         # X = [Batch size, Sequence length ] need to convert to [batch size, Sequence length, hidden_dim] for attention
-        x = x.long()  # Ensure input is of type long for embedding
-        x = self.token_embedding(x)  # [Batch size, Sequence length, hidden_dim]
+        token_ids = x.long()
+        x = self.token_embedding(token_ids)  # [Batch size, Sequence length, hidden_dim]
         _, seq_len, _ = x.shape
         pos = torch.arange(seq_len, device=x.device)
 
@@ -158,7 +209,7 @@ class Model(nn.Module):
         aux_losses = []
 
         for block in self.MoEBlocks:
-            x, aux_loss = block(x, causal_mask=causal_mask)
+            x, aux_loss = block(x, causal_mask=causal_mask, token_ids=token_ids)
             aux_losses.append(aux_loss)
         moe_aux_loss = torch.stack(aux_losses).mean()
         x = self.final_norm(x)
@@ -177,6 +228,11 @@ class Model(nn.Module):
             cross_loss = cross_loss / valid
             return logits, cross_loss + moe_aux_loss * self.moe_multiplier
         return logits, None
+
+    def set_routing(self, mode="learned_top2", observer=None):
+        """Configure evaluation-only routing and optional detached telemetry."""
+        for block in self.MoEBlocks:
+            block.moe.set_routing(mode, observer)
 
     @torch.no_grad()
     def generate(self, x, max_new_tokens, temperature=1.0, top_k=None):

@@ -25,6 +25,7 @@ gpt2-xl (1558M)
 The validation set of HellaSwag has a total of 10,042 examples.
 """
 
+import hashlib
 import os
 import json
 import tiktoken
@@ -59,18 +60,35 @@ hellaswags = {
     "test": "https://raw.githubusercontent.com/rowanz/hellaswag/master/data/hellaswag_test.jsonl",
 }
 
+hellaswag_sha256 = {
+    "val": "0aa3b88843990f3f10a97b9575c94d7b71fb2205240ba04ae4884d9e9c992588",
+}
+
 enc = tiktoken.get_encoding("gpt2")
+
+def dataset_path(split):
+    return os.path.join(DATA_CACHE_DIR, f"hellaswag_{split}.jsonl")
+
 
 def download(split):
     """Downloads HellaSwag DATA_CACHE_DIR"""
     os.makedirs(DATA_CACHE_DIR, exist_ok=True)
     data_url = hellaswags[split]
-    data_filename = os.path.join(DATA_CACHE_DIR, f"hellaswag_{split}.jsonl")
+    data_filename = dataset_path(split)
+    expected_hash = hellaswag_sha256.get(split)
+    if os.path.exists(data_filename) and expected_hash:
+        if file_sha256(data_filename) != expected_hash:
+            os.remove(data_filename)
     if not os.path.exists(data_filename):
         print(f"Downloading {data_url} to {data_filename}...")
-        download_file(data_url, data_filename)
+        temporary = data_filename + ".tmp"
+        download_file(data_url, temporary)
+        if expected_hash and file_sha256(temporary) != expected_hash:
+            os.remove(temporary)
+            raise RuntimeError(f"HellaSwag {split} SHA-256 verification failed")
+        os.replace(temporary, data_filename)
 
-def render_example(example):
+def render_example(example, tokenizer=enc):
     """
     Given the example as a dictionary, render it as three torch tensors:
     - tokens (the tokens of context + completion, of size 4xN, as there are always 4 candidates)
@@ -89,12 +107,12 @@ def render_example(example):
     }
 
     # gather up all the tokens
-    ctx_tokens = enc.encode(ctx)
+    ctx_tokens = tokenizer.encode(ctx)
     data["ctx_tokens"] = ctx_tokens
     tok_rows = []
     mask_rows = []
     for end in endings:
-        end_tokens = enc.encode(" " + end) # note: prepending " " because GPT-2 tokenizer
+        end_tokens = tokenizer.encode(" " + end) # note: prepending " " because GPT-2 tokenizer
         tok_rows.append(ctx_tokens + end_tokens)
         mask_rows.append([0]*len(ctx_tokens) + [1]*len(end_tokens))
         data["ending_tokens"].append(end_tokens)
@@ -112,7 +130,7 @@ def render_example(example):
 def iterate_examples(split):
     # there are 10,042 examples in total in val
     download(split)
-    with open(os.path.join(DATA_CACHE_DIR, f"hellaswag_{split}.jsonl"), "r") as f:
+    with open(dataset_path(split), "r") as f:
         for line in f:
             example = json.loads(line)
             yield example
@@ -130,6 +148,49 @@ def completion_losses(logits, tokens, mask):
     sum_loss = masked_shift_losses.sum(dim=1)
     avg_loss = sum_loss / shift_mask.sum(dim=1)
     return sum_loss, avg_loss
+
+
+def collate_examples(rendered_examples, pad_token_id=0):
+    """Dynamically pad a batch and return [examples, choices, sequence]."""
+    max_len = max(tokens.size(1) for _, tokens, _, _ in rendered_examples)
+    batch = len(rendered_examples)
+    tokens = torch.full((batch, 4, max_len), pad_token_id, dtype=torch.long)
+    mask = torch.zeros((batch, 4, max_len), dtype=torch.long)
+    labels = torch.empty(batch, dtype=torch.long)
+    for row, (_, item_tokens, item_mask, label) in enumerate(rendered_examples):
+        length = item_tokens.size(1)
+        tokens[row, :, :length] = item_tokens
+        mask[row, :, :length] = item_mask
+        labels[row] = label
+    return tokens, mask, labels
+
+
+def score_batch(model, tokens, mask):
+    """Score a dynamically padded batch with completion likelihood."""
+    batch, choices, sequence = tokens.shape
+    logits, _ = model(tokens.reshape(batch * choices, sequence))
+    sum_loss, avg_loss = completion_losses(
+        logits, tokens.reshape(batch * choices, sequence), mask.reshape(batch * choices, sequence)
+    )
+    return sum_loss.reshape(batch, choices), avg_loss.reshape(batch, choices)
+
+
+def wilson_interval(successes, total, z=1.959963984540054):
+    if total == 0:
+        return None
+    proportion = successes / total
+    denominator = 1 + z * z / total
+    center = (proportion + z * z / (2 * total)) / denominator
+    margin = z * ((proportion * (1 - proportion) / total + z * z / (4 * total * total)) ** 0.5) / denominator
+    return [center - margin, center + margin]
+
+
+def file_sha256(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 @torch.no_grad()
 def evaluate(model_type, device):

@@ -26,7 +26,7 @@ import tiktoken
 import torch
 
 from chat_template import append_reply, build_inference_prompt
-from model import Model, ModelConfig
+from checkpoint import load_checkpoint as load_checkpoint_with_metadata
 
 EOS_TOKEN_ID = 50256
 
@@ -42,20 +42,9 @@ def get_device(requested):
 
 
 def load_checkpoint(path, device):
-    # weights_only=True is the safe default; the checkpoint only holds tensors
-    # and a plain config dict, so it loads fine. Fall back for older torch.
-    try:
-        ckpt = torch.load(path, map_location=device, weights_only=True)
-    except Exception:
-        ckpt = torch.load(path, map_location=device, weights_only=False)
-
-    config = ModelConfig(**ckpt["model_config"])
-    model = Model(config)
-    model.load_state_dict(ckpt["model"])
-    model.to(device).eval()
-
-    step = ckpt.get("step", "?")
-    tokens_seen = ckpt.get("tokens_seen", 0)
+    model, config, metadata = load_checkpoint_with_metadata(path, device)
+    step = metadata.get("step", "?")
+    tokens_seen = metadata.get("tokens_seen") or 0
     print(
         f"Loaded {path} (step {step}, {tokens_seen:,} tokens seen) on {device}",
         file=sys.stderr,

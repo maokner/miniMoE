@@ -1,0 +1,86 @@
+{
+  "schema_version": "minimoe-prompts-v1",
+  "generation": {
+    "max_new_tokens": 96,
+    "temperature": 0,
+    "seed": 67
+  },
+  "prompts": [
+    {
+      "id": "scientific_completion",
+      "category": "scientific_completion",
+      "mode": "raw_base_only",
+      "prompt": "Photosynthesis converts light energy into"
+    },
+    {
+      "id": "narrative_completion",
+      "category": "narrative_completion",
+      "mode": "raw_base_only",
+      "prompt": "Mara opened the old wooden box and discovered"
+    },
+    {
+      "id": "factual_recall",
+      "category": "factual_recall",
+      "mode": "instruction",
+      "messages": [{"role": "user", "content": "What is the capital of Japan? Answer in one sentence."}]
+    },
+    {
+      "id": "concise_explanation",
+      "category": "concise_explanation",
+      "mode": "instruction",
+      "messages": [{"role": "user", "content": "Explain why the sky appears blue in at most three sentences."}]
+    },
+    {
+      "id": "summarization",
+      "category": "summarization",
+      "mode": "instruction",
+      "messages": [{"role": "user", "content": "Summarize this in one sentence: Bees collect nectar from flowers, carry pollen between plants, and turn the nectar into honey inside their hive."}]
+    },
+    {
+      "id": "practical_instruction",
+      "category": "practical_instruction",
+      "mode": "instruction",
+      "messages": [{"role": "user", "content": "Give three short steps for safely changing a burned-out light bulb."}]
+    },
+    {
+      "id": "probability",
+      "category": "probability",
+      "mode": "instruction",
+      "messages": [{"role": "user", "content": "A fair coin is flipped three times. What is the probability of exactly two heads? Show the calculation briefly."}]
+    },
+    {
+      "id": "arithmetic",
+      "category": "arithmetic",
+      "mode": "instruction",
+      "messages": [{"role": "user", "content": "Compute 37 * 24 and give only the result."}]
+    },
+    {
+      "id": "elementary_python",
+      "category": "elementary_python",
+      "mode": "instruction",
+      "messages": [{"role": "user", "content": "Write a Python function named square_even_numbers that returns the squares of only the even integers in a list."}]
+    },
+    {
+      "id": "impossible_premise",
+      "category": "impossible_factual_premise",
+      "mode": "instruction",
+      "messages": [{"role": "user", "content": "Which astronaut became the first person to walk on the Sun in 1987?"}]
+    },
+    {
+      "id": "ambiguity",
+      "category": "ambiguity",
+      "mode": "instruction",
+      "messages": [{"role": "user", "content": "Alex told Jordan that they had won. Who won?"}]
+    },
+    {
+      "id": "two_turn_memory",
+      "category": "two_turn_memory",
+      "mode": "instruction",
+      "messages": [
+        {"role": "user", "content": "Remember that my code word is cedar."},
+        {"role": "assistant", "content": "I will remember that your code word is cedar."},
+        {"role": "user", "content": "What is my code word? Answer with one word."}
+      ]
+    }
+  ]
+}
