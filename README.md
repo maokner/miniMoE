@@ -28,7 +28,7 @@ It was pretrained on FineWeb-Edu web text, then fine-tuned on `smol-smoltalk` to
 
 | Stage | Data | Steps | Peak LR | Hardware |
 |---|---|---:|---:|---|
-| Pretrain | FineWeb-Edu, 10B tokens | 19,073 | `6e-4` | 8 GPU, DDP |
+| Pretrain | FineWeb-Edu, 10B tokens | 19,073 | `6e-4` | 8x A100, DDP |
 | Instruction tune | smol-smoltalk, 2 epochs | 6,358 | `2e-5` | 2x A100, DDP |
 
 Both stages use AdamW with cosine decay, bf16 autocast with an fp32 router, and `torch.compile`.
