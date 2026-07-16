@@ -1,0 +1,338 @@
+{
+  "ablations": [
+    {
+      "metrics": {
+        "acc": 0.321,
+        "acc_norm": 0.35,
+        "acc_norm_wilson_95": [
+          0.32106271005247566,
+          0.38008531749319086
+        ],
+        "acc_wilson_95": [
+          0.2927964857623614,
+          0.3505734937754673
+        ],
+        "correct": 321,
+        "correct_norm": 350,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "learned_top2",
+      "timing": {
+        "examples_per_second": 40.918478707596165,
+        "rank_zero_elapsed_seconds_this_invocation": 24.438836232060567
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.323,
+        "acc_norm": 0.337,
+        "acc_norm_wilson_95": [
+          0.30837644459788477,
+          0.36687107866840624
+        ],
+        "acc_wilson_95": [
+          0.2947418927752481,
+          0.35261277972863847
+        ],
+        "correct": 323,
+        "correct_norm": 337,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "learned_top1",
+      "timing": {
+        "examples_per_second": 44.18566114778686,
+        "rank_zero_elapsed_seconds_this_invocation": 22.63177632796578
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.273,
+        "acc_norm": 0.288,
+        "acc_norm_wilson_95": [
+          0.2607870341550728,
+          0.3168355114428025
+        ],
+        "acc_wilson_95": [
+          0.2462959489171712,
+          0.3014413994352708
+        ],
+        "correct": 273,
+        "correct_norm": 288,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "random_top2",
+      "timing": {
+        "examples_per_second": 7.75872948766963,
+        "rank_zero_elapsed_seconds_this_invocation": 128.88708152400795
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.282,
+        "acc_norm": 0.306,
+        "acc_norm_wilson_95": [
+          0.2782254333203639,
+          0.3352593489720314
+        ],
+        "acc_wilson_95": [
+          0.25498602521354063,
+          0.3106824414861613
+        ],
+        "correct": 282,
+        "correct_norm": 306,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "uniform_all",
+      "timing": {
+        "examples_per_second": 44.37258592078984,
+        "rank_zero_elapsed_seconds_this_invocation": 22.53643729002215
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.315,
+        "acc_norm": 0.323,
+        "acc_norm_wilson_95": [
+          0.2947418927752481,
+          0.35261277972863847
+        ],
+        "acc_wilson_95": [
+          0.28696390735652827,
+          0.3444519932831271
+        ],
+        "correct": 315,
+        "correct_norm": 323,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "ablate_expert_0",
+      "timing": {
+        "examples_per_second": 42.16159764747627,
+        "rank_zero_elapsed_seconds_this_invocation": 23.718266284908168
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.322,
+        "acc_norm": 0.344,
+        "acc_norm_wilson_95": [
+          0.3152044922028449,
+          0.37398945644464826
+        ],
+        "acc_wilson_95": [
+          0.29376911381672366,
+          0.351593212204134
+        ],
+        "correct": 322,
+        "correct_norm": 344,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "ablate_expert_1",
+      "timing": {
+        "examples_per_second": 43.56948541542326,
+        "rank_zero_elapsed_seconds_this_invocation": 22.9518432560144
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.316,
+        "acc_norm": 0.355,
+        "acc_norm_wilson_95": [
+          0.3259484631755532,
+          0.38516129678525773
+        ],
+        "acc_wilson_95": [
+          0.28793562210416745,
+          0.34547262501851683
+        ],
+        "correct": 316,
+        "correct_norm": 355,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "ablate_expert_2",
+      "timing": {
+        "examples_per_second": 44.09655293125042,
+        "rank_zero_elapsed_seconds_this_invocation": 22.67750954499934
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.319,
+        "acc_norm": 0.332,
+        "acc_norm_wilson_95": [
+          0.30350363489239063,
+          0.36178215595875596
+        ],
+        "acc_wilson_95": [
+          0.29085168384683435,
+          0.3485336027249366
+        ],
+        "correct": 319,
+        "correct_norm": 332,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "ablate_expert_3",
+      "timing": {
+        "examples_per_second": 42.99911447205169,
+        "rank_zero_elapsed_seconds_this_invocation": 23.256292885984294
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.322,
+        "acc_norm": 0.35,
+        "acc_norm_wilson_95": [
+          0.32106271005247566,
+          0.38008531749319086
+        ],
+        "acc_wilson_95": [
+          0.29376911381672366,
+          0.351593212204134
+        ],
+        "correct": 322,
+        "correct_norm": 350,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "ablate_expert_4",
+      "timing": {
+        "examples_per_second": 44.74956108875221,
+        "rank_zero_elapsed_seconds_this_invocation": 22.34658789203968
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.326,
+        "acc_norm": 0.344,
+        "acc_norm_wilson_95": [
+          0.3152044922028449,
+          0.37398945644464826
+        ],
+        "acc_wilson_95": [
+          0.29766113143613737,
+          0.35567058051683587
+        ],
+        "correct": 326,
+        "correct_norm": 344,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "ablate_expert_5",
+      "timing": {
+        "examples_per_second": 44.591742229919795,
+        "rank_zero_elapsed_seconds_this_invocation": 22.42567681800574
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.325,
+        "acc_norm": 0.36,
+        "acc_norm_wilson_95": [
+          0.3308377297718964,
+          0.39023376260405895
+        ],
+        "acc_wilson_95": [
+          0.296687901945411,
+          0.3546514635245333
+        ],
+        "correct": 325,
+        "correct_norm": 360,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "ablate_expert_6",
+      "timing": {
+        "examples_per_second": 43.33685561132384,
+        "rank_zero_elapsed_seconds_this_invocation": 23.07504746003542
+      }
+    },
+    {
+      "metrics": {
+        "acc": 0.315,
+        "acc_norm": 0.377,
+        "acc_norm_wilson_95": [
+          0.347487093401629,
+          0.4074542891858176
+        ],
+        "acc_wilson_95": [
+          0.28696390735652827,
+          0.3444519932831271
+        ],
+        "correct": 315,
+        "correct_norm": 377,
+        "skipped": 0,
+        "total": 1000
+      },
+      "mode": "ablate_expert_7",
+      "timing": {
+        "examples_per_second": 45.583357188395304,
+        "rank_zero_elapsed_seconds_this_invocation": 21.9378312980989
+      }
+    }
+  ],
+  "argv": "src/experiments.py ablations --checkpoint checkpoints/minimoe_step_0019073.pt --output results/ablations.json",
+  "checkpoints": [
+    {
+      "filename": "minimoe_step_0019073.pt",
+      "model_config": {
+        "hidden_dim": 768,
+        "max_seq_length": 1024,
+        "moe_multiplier": 0.01,
+        "num_experts": 8,
+        "num_layers": 6,
+        "top_k": 2,
+        "vocab_size": 50304
+      },
+      "path": "checkpoints/minimoe_step_0019073.pt",
+      "sha256": "67040b0bce7edc1ec49116fbdac4e819dc092b83bc503a6c4722603e3e313532",
+      "step": 19073,
+      "tokens_seen": 9999745024
+    }
+  ],
+  "command": "ablations",
+  "dataset": {
+    "name": "HellaSwag",
+    "path": "/home/ubuntu/miniMoE/hellaswag/hellaswag_val.jsonl",
+    "sha256": "0aa3b88843990f3f10a97b9575c94d7b71fb2205240ba04ae4884d9e9c992588",
+    "split": "val",
+    "url": "https://raw.githubusercontent.com/rowanz/hellaswag/master/data/hellaswag_val.jsonl"
+  },
+  "environment": {
+    "gpu": {
+      "compute_capability": [
+        8,
+        6
+      ],
+      "cuda_runtime": "13.0",
+      "cudnn": 92000,
+      "name": "NVIDIA RTX A6000",
+      "total_memory_bytes": 50896568320
+    },
+    "packages": {
+      "matplotlib": "3.11.0",
+      "numpy": "2.5.0",
+      "pytest": "9.1.1",
+      "requests": "2.34.2",
+      "ruff": "0.15.21",
+      "tiktoken": "0.13.0",
+      "torch": "2.12.1"
+    },
+    "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.35",
+    "python": "3.12.13",
+    "world_size": 1
+  },
+  "git_commit": "cfacb6bbb67769dbd2db53c28050a35cc3872118",
+  "schema_version": "minimoe-eval-v1",
+  "settings": {
+    "batch_size_per_gpu": 8,
+    "max_examples": 1000,
+    "seed": 67
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "note": "Hand-picked showcase generations selected for quality; not a random sample. Each record keeps its full unedited output and exact decoding settings. The committed deterministic prompt suite is in prompt_outputs.json.",
+  "samples": [
+    {
+      "checkpoint": "sft",
+      "prompt_id": "capital_france",
+      "prompt": "What is the capital of France?",
+      "decoding": "greedy",
+      "temperature": 0.0,
+      "top_k": null,
+      "seed": 67,
+      "output": " The capital of France is Paris."
+    },
+    {
+      "checkpoint": "sft",
+      "prompt_id": "capital_japan_one_sentence",
+      "prompt": "What is the capital of Japan? Answer in one sentence.",
+      "decoding": "greedy",
+      "temperature": 0.0,
+      "top_k": null,
+      "seed": 67,
+      "output": " The capital of Japan is Tokyo."
+    },
+    {
+      "checkpoint": "sft",
+      "prompt_id": "photosynthesis_simple",
+      "prompt": "In one sentence, what do plants use sunlight for?",
+      "decoding": "greedy",
+      "temperature": 0.0,
+      "top_k": null,
+      "seed": 67,
+      "output": " Plants use sunlight to convert carbon dioxide into glucose, a type of sugar that plants use for energy."
+    },
+    {
+      "checkpoint": "sft",
+      "prompt_id": "memory_color",
+      "prompt": "What is my favorite color? Answer with one word.",
+      "decoding": "greedy",
+      "temperature": 0.0,
+      "top_k": null,
+      "seed": 67,
+      "output": " My favorite color is green."
+    },
+    {
+      "checkpoint": "sft",
+      "prompt_id": "memory_code_word",
+      "prompt": "What is my code word? Answer with one word.",
+      "decoding": "greedy",
+      "temperature": 0.0,
+      "top_k": null,
+      "seed": 67,
+      "output": " My code word is cedar."
+    },
+    {
+      "checkpoint": "base",
+      "prompt_id": "photosynthesis",
+      "prompt": "Photosynthesis converts light energy into",
+      "decoding": "t0.7_k50_s67",
+      "temperature": 0.7,
+      "top_k": 50,
+      "seed": 67,
+      "output": " chemical energy.\nHow the light energy is used to turn food into the chemical energy of the food.\nWhat is photosynthesis?\nPhotosynthesis is the process by which light energy is converted into chemical energy. The process involves the conversion of light energy into chemical energy.\nPhotosynthesis is the process by which light energy is converted to chemical energy.\nPhotosynthesis is the process by which light energy is converted into chemical energy.\nPhotosynthesis is an important process in which",
+      "readme_excerpt": " chemical energy."
+    },
+    {
+      "checkpoint": "base",
+      "prompt_id": "box_discovery",
+      "prompt": "Mara opened the old wooden box and discovered",
+      "decoding": "t0.7_k50_s68",
+      "temperature": 0.7,
+      "top_k": 50,
+      "seed": 68,
+      "output": " a treasure chest. It was filled with valuable objects and pictures of the ancient past.\nIt was also the first time that a ship had been found in Antarctica, as well as the first time that a ship had been found in the South Atlantic Ocean.\nThe ship had been discovered in the Antarctic Peninsula in 1801 and is now considered to be the first time where a ship has been found in the Southern Ocean.\nThe ship and the chest were found in the Antarctic in",
+      "readme_excerpt": " a treasure chest. It was filled with valuable objects and pictures of the ancient past."
+    },
+    {
+      "checkpoint": "base",
+      "prompt_id": "moon_landing",
+      "prompt": "In 1969, the Apollo 11 mission landed the first humans on",
+      "decoding": "t0.9_k50_s69",
+      "temperature": 0.9,
+      "top_k": 50,
+      "seed": 69,
+      "output": " the moon, and the first time that humans landed on the moon was in 1969. The Apollo program continued through the 1970s and 1980s.\nNASA received numerous awards for its achievements in the space science program, including the Pioneer Medal, an Apollo-era medal from President Carter, and the NASA Medal of Achievement, an award in honor of President George H. W. Bush.\nOn July 22, 1969, NASA became the first manned earth orbiter. The astronauts had",
+      "readme_excerpt": " the moon, and the first time that humans landed on the moon was in 1969."
+    },
+    {
+      "checkpoint": "base",
+      "prompt_id": "paris_fact",
+      "prompt": "The capital of France is Paris, a city known for",
+      "decoding": "t0.7_k50_s67",
+      "temperature": 0.7,
+      "top_k": 50,
+      "seed": 67,
+      "output": " its great collections of arts and culture, with a great many museums and galleries. France\u2019s capital is known for its beautiful boulevards and is one of the most popular tourist destinations in the world.\nThe capital of France is also known for its great museums and galleries, with several museums and galleries. The largest collection of museums and galleries in France is located in the heart of the French capital.\nThe largest collection of museums and galleries in France is located in the",
+      "readme_excerpt": " its great collections of arts and culture, with a great many museums and galleries. France\u2019s capital is known for its beautiful boulevards and is one of the most popular tourist destinations in the world."
+    }
+  ]
+}

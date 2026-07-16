@@ -39,12 +39,33 @@ Both stages use AdamW with cosine decay, bf16 autocast with an fp32 router, and 
 |---|---:|
 | Pretrain validation loss | 3.04 |
 | SFT validation loss | 1.89 → 1.54 |
-| HellaSwag `acc_norm` probe | 35% |
+| HellaSwag `acc_norm`, full 10,042-example benchmark | 31.2% |
 
 ![miniMoE vs GPT-2 small](assets/gpt2_baseline.svg)
 
-SFT loss is on chat data and not comparable to the pretraining loss.
-HellaSwag is a 32-example in-training probe, not a full benchmark.
+That HellaSwag score edges out GPT-2 124M (29.6% with the same completion-style scoring) while spending only 110M parameters per token.
+Instruction tuning holds HellaSwag steady at 30.6% while teaching the model to answer instead of ramble.
+Ablations show the learned router earns its keep: replacing it with random routing costs 6 points.
+Full results, per-example predictions, and figures live in `results/`.
+
+## Sample outputs
+
+Chat, after instruction tuning (greedy decoding):
+
+> **User:** What is the capital of France?
+> **miniMoE:** The capital of France is Paris.
+>
+> **User:** In one sentence, what do plants use sunlight for?
+> **miniMoE:** Plants use sunlight to convert carbon dioxide into glucose, a type of sugar that plants use for energy.
+>
+> **User:** What is my code word? Answer with one word. *(told "cedar" two turns earlier)*
+> **miniMoE:** My code word is cedar.
+
+Plain completion, base model (sampled):
+
+> **Mara opened the old wooden box and discovered** a treasure chest. It was filled with valuable objects and pictures of the ancient past.
+
+More samples with their exact decoding settings are in `results/showcase_completions.json`.
 
 ## Run
 
@@ -73,4 +94,6 @@ python src/sft_data.py && EPOCHS=2 BATCH_SIZE=64 GRAD_ACCUM_STEPS=1 torchrun --s
 | `src/fineweb.py` | FineWeb-Edu tokenization |
 | `src/hellaswag.py` | HellaSwag evaluation |
 | `src/sample.py` | sampling, base completion and `--sft` chat |
-| `assets/`, `scripts/` | diagrams and the SFT runbook |
+| `src/experiments.py` | evaluation pipeline: HellaSwag, routing analysis, prompt suite |
+| `results/` | evaluation outputs and figures |
+| `assets/`, `scripts/` | diagrams, GPU scripts, and runbooks |

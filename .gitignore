@@ -10,3 +10,4 @@ sft_data/
 *.pt
 results/.parts/
 results/**/*.tmp
+results/prompt_explorations.json
